@@ -1,18 +1,10 @@
-export const generateAnswerOptions = (currentNumberLength, setAnswerOptions, setCorrectNumber, numbersRange) => {
-    const options = [];
-    const min = numbersRange[currentNumberLength - 2].min;
-    const max = numbersRange[currentNumberLength - 2].max;
+import { numbersRange } from "../constants/constants";
 
-    for (let i = 0; i < 4; i++) {
-      options.push(Math.floor(Math.random() * (max - min + 1) + min));
-    }
-    setAnswerOptions(options);
+export const generateNumber = (currentNumberLength) => {
+  max = numbersRange[currentNumberLength].max;
+  min = numbersRange[currentNumberLength].min;
 
-    const correctAnswerIndex = Math.floor(Math.random() * options.length);
-    const correctAnswer = options[correctAnswerIndex];
-    setCorrectNumber(correctAnswer);
-};
+  number = Math.floor(Math.random() * (max - min + 1)) + min;
 
-export const handleTimerEnd = (setIsGuessTime) => {
-    setIsGuessTime(prevIsGuessTime => !prevIsGuessTime);
+  return number;
 };

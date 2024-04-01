@@ -1,92 +1,59 @@
-import React, { useState, useEffect } from "react";
-import { StyleSheet, View } from "react-native";
-import GuessTheNumberScreen from "./src/screens/GuessTheNumberScreen";
-import RememberNumberScreen from "./src/screens/RememberNumberScreen";
-import { numbersRange } from "./src/constants/constants";
-import { generateAnswerOptions, handleTimerEnd } from "./src/utils/helpers";
+import React, { useState } from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import HomeScreen from "./src/screens/HomeScreen";
+import { useFonts } from "expo-font";
+import { Text, View } from "react-native";
+import SettingsScreen from "./src/screens/SettingsScreen";
+import Ionicons from "react-native-vector-icons/Ionicons";
+
+const Tab = createBottomTabNavigator();
 
 const App = () => {
-  const [initialTimerSeconds] = useState(0);
-  const [correctNumber, setCorrectNumber] = useState(null);
-  const [currentNumberLength, setCurrentNumberLength] = useState(2);
-  const [isGuessTime, setIsGuessTime] = useState(false);
-  const [answerOptions, setAnswerOptions] = useState([]);
-  const [secondsLeft, setSecondsLeft] = useState(initialTimerSeconds);
+  const [loadedFont] = useFonts({
+    "Poppins-Regular": require("./src/assets/fonts/Poppins-Regular.ttf"),
+  });
 
-  const handleOptionClick = (selectedOption) => {
-    if (correctNumber === selectedOption) {
-      setIsGuessTime(false);
-      setSecondsLeft(initialTimerSeconds);
-      generateAnswerOptions(
-        currentNumberLength,
-        setAnswerOptions,
-        setCorrectNumber,
-        numbersRange
-      );
+  const [isFontLoaded, setIsFontLoaded] = useState(false);
+
+  if (!isFontLoaded) {
+    if (loadedFont) {
+      setIsFontLoaded(true);
     } else {
-      console.log(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!isGuessTime) {
-      setCurrentNumberLength((previousCurrentNumberLength) => {
-        if (previousCurrentNumberLength - 2 < numbersRange.length - 1) {
-          return previousCurrentNumberLength + 1;
-        } else {
-          return previousCurrentNumberLength;
-        }
-      });
-      generateAnswerOptions(
-        currentNumberLength,
-        setAnswerOptions,
-        setCorrectNumber,
-        numbersRange
+      return (
+        <View
+          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+        >
+          <Text>Loading...</Text>
+        </View>
       );
     }
-  }, [isGuessTime]);
-
-  useEffect(() => {
-    setSecondsLeft(initialTimerSeconds);
-    const intervalId = setInterval(() => {
-      setSecondsLeft((prevValue) => {
-        if (prevValue === 0) {
-          handleTimerEnd(setIsGuessTime, initialTimerSeconds);
-          return initialTimerSeconds;
-        }
-        return prevValue - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, []);
+  }
 
   return (
-    <View style={styles.container}>
-      {!isGuessTime && (
-        <RememberNumberScreen
-          secondsLeft={secondsLeft}
-          correctNumber={correctNumber}
-        />
-      )}
-      {isGuessTime && (
-        <GuessTheNumberScreen
-          seconds={secondsLeft}
-          answerOptions={answerOptions}
-          handleOptionClick={handleOptionClick}
-        />
-      )}
-    </View>
+    <NavigationContainer>
+      <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === "Home") {
+            iconName = focused ? "home" : "home-outline";
+          } else if (route.name === "Settings") {
+            iconName = focused ? "settings" : "settings-outline";
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: 'green',
+        tabBarInactiveTintColor: 'gray',
+      })}
+      >
+        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Settings" component={SettingsScreen} />
+      </Tab.Navigator>
+    </NavigationContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
 
 export default App;
