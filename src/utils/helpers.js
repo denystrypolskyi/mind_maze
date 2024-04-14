@@ -8,3 +8,11 @@ export const generateNumber = (currentNumberLength) => {
 
   return number;
 };
+
+export const redirectToLoginPage = (navigation) => {
+  navigation.navigate("Login");
+};
+
+export const redirectToSignUpPage = (navigation) => {
+  navigation.navigate("SignUp");
+};
