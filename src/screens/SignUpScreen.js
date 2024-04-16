@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: "gray",
-    fontFamily: fonts.regular,
+    fontFamily: fonts.bold,
     fontSize: textSizes.medium,
     marginBottom: 20,
   },

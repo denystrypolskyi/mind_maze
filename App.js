@@ -34,21 +34,21 @@ const App = () => {
   }, []);
 
   const tabBarOptions = {
-    activeTintColor: "#ff847c", // Coral
-    inactiveTintColor: "#6c757d", // Gray
+    activeTintColor: "#ff847c",
+    inactiveTintColor: "#6c757d",
     tabBarLabelStyle: {
       fontFamily: fonts.bold,
     },
     style: {
-      backgroundColor: "#f8f9fa", // Light Gray
+      backgroundColor: "#f8f9fa",
     },
   };
 
   const stackScreenOptions = {
     headerStyle: {
-      backgroundColor: "#f8f9fa", // Light Gray
+      backgroundColor: "#f8f9fa",
     },
-    headerTintColor: "#212529", // Dark
+    headerTintColor: "#212529",
     headerTitleStyle: {
       fontFamily: fonts.bold,
     },
@@ -93,7 +93,11 @@ const App = () => {
             component={ProfileScreen}
             initialParams={{ setIsLogged: setIsLogged }}
           />
-          <Tab.Screen name="Game" component={GameScreen} />
+          <Tab.Screen
+            name="Game"
+            component={GameScreen}
+            initialParams={{ setIsLogged: setIsLogged }}
+          />
           <Tab.Screen
             name="Leaderboard"
             component={LeaderboardScreen}

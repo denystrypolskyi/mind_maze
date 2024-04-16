@@ -1,21 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import CountdownProgressBar from "../components/CountdownProgressBar";
-import NumberInput from "../components/NumberInput";
-import GameLostScreen from "./IncorrectAnswerScreen";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import GameOverScreen from "./GameOverScreen";
 import { generateNumber } from "../utils/helpers";
-import { fonts, numbersRange } from "../constants/constants";
+import { numbersRange } from "../constants/constants";
+import { saveUserResult } from "../api/api";
+import EnterNumberScreen from "./EnterNumberScreen";
+import RememberNumberScreen from "./RememberNumberScreen";
 
-const PlayScreen = () => {
-  const [initialTimerSeconds] = useState(10);
+const GameScreen = ({ route }) => {
   const [targetNumber, setTargetNumber] = useState(null);
+  const [initialTimerSeconds] = useState(2);
   const [currentNumberLength, setCurrentNumberLength] = useState(2);
   const [remainingTimerSeconds, setRemainingTimerSeconds] =
     useState(initialTimerSeconds);
   const [currentLevel, setCurrentLevel] = useState(1);
-  const [lastUserInput, setLastUserInput] = useState("");
   const [isGuessTime, setIsGuessTime] = useState(false);
   const [hasLostGame, setHasLostGame] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { setIsLogged } = route.params;
 
   useEffect(() => {
     if (!isGuessTime) {
@@ -46,8 +49,7 @@ const PlayScreen = () => {
     setRemainingTimerSeconds(initialTimerSeconds);
   };
 
-  const handleNumberSubmission = (enteredText) => {
-    setLastUserInput(enteredText);
+  const handleNumberSubmission = async (enteredText) => {
     const parsedNumber = parseFloat(enteredText);
     if (
       !isNaN(parsedNumber) &&
@@ -57,6 +59,11 @@ const PlayScreen = () => {
       moveToNextLevel();
     } else {
       setHasLostGame(true);
+      setIsLoading(true);
+      await saveUserResult(currentLevel, setIsLogged);
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 1000);
     }
   };
 
@@ -65,30 +72,38 @@ const PlayScreen = () => {
     setCurrentNumberLength(2);
     setRemainingTimerSeconds(initialTimerSeconds);
     setCurrentLevel(1);
-    setLastUserInput("");
     setIsGuessTime(false);
     setHasLostGame(false);
   };
 
+  if (isLoading) {
+    return (
+      <ActivityIndicator
+        style={styles.loadingIndicator}
+        size="large"
+        color="#0000ff"
+      />
+    );
+  }
+
   return (
     <View style={styles.container}>
       {!isGuessTime && !hasLostGame && (
-        <>
-          <Text style={styles.header}>{targetNumber}</Text>
-          <CountdownProgressBar seconds={remainingTimerSeconds} width={200} />
-        </>
+        <RememberNumberScreen
+          targetNumber={targetNumber}
+          remainingTimerSeconds={remainingTimerSeconds}
+        />
       )}
       {isGuessTime && !hasLostGame && (
-        <NumberInput
+        <EnterNumberScreen
           targetNumber={targetNumber}
           onNumberSubmit={handleNumberSubmission}
         />
       )}
       {hasLostGame && (
-        <GameLostScreen
+        <GameOverScreen
           targetNumber={targetNumber}
-          userInput={lastUserInput}
-          maxLevelReached={currentLevel}
+          levelReached={currentLevel}
           onRetry={resetGame}
         />
       )}
@@ -103,12 +118,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8f9fa",
     alignItems: "center",
     justifyContent: "center",
+    paddingVertical: 40,
+    paddingHorizontal: 20,
   },
-  header: {
-    fontFamily: fonts.bold,
-    fontSize: 24,
-    color: "#0095FF",
+  loadingIndicator: {
+    position: "absolute",
+    alignSelf: "center",
+    top: "50%",
   },
 });
 
-export default PlayScreen;
+export default GameScreen;

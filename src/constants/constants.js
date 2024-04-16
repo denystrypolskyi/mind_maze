@@ -6,6 +6,8 @@ export const numbersRange = [
   { min: 100000, max: 999999 },
   { min: 1000000, max: 9999999 },
   { min: 10000000, max: 99999999 },
+  { min: 100000000, max: 999999999 },
+  { min: 1000000000, max: 9999999999 },
 ];
 
 export const colors = {
@@ -36,4 +38,5 @@ export const API_ENDPOINTS = {
   LOGIN: `${API_BASE_URL}/login`,
   REGISTER: `${API_BASE_URL}/register`,
   USER_RESULTS: `${API_BASE_URL}/user-results`,
+  SAVE_RESULT: `${API_BASE_URL}/save-result`,
 };

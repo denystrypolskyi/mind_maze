@@ -30,30 +30,30 @@ const LeaderboardScreen = ({ route }) => {
     }, [])
   );
 
+  if (isLoading) {
+    return (
+      <ActivityIndicator
+        style={styles.loadingIndicator}
+        size="large"
+        color="#0000ff"
+      />
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {isLoading ? (
-        <ActivityIndicator
-          style={styles.loadingIndicator}
-          size="large"
-          color="#0000ff"
-        />
-      ) : (
-        <>
-          <Text style={styles.leaderboardHeader}>Leaderboard</Text>
-          <FlatList
-            data={userResults}
-            renderItem={({ item, index }) => (
-              <LeaderboardItem
-                place={index + 1}
-                username={item.username}
-                bestResult={item.maxLevelReached}
-              />
-            )}
-            keyExtractor={(item) => item._id}
+      <Text style={styles.header}>Leaderboard</Text>
+      <FlatList
+        data={userResults}
+        renderItem={({ item, index }) => (
+          <LeaderboardItem
+            place={index + 1}
+            username={item.username}
+            bestResult={item.maxLevelReached}
           />
-        </>
-      )}
+        )}
+        keyExtractor={(item) => item._id}
+      />
     </View>
   );
 };
@@ -65,8 +65,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 40,
   },
-  leaderboardHeader: {
-    color: "gray",
+  header: {
+    color: "black",
     fontFamily: fonts.bold,
     fontSize: textSizes.extraLarge,
     textAlign: "center",

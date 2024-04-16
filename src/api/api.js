@@ -21,18 +21,20 @@ export const checkAuthentication = async (setIsLogged) => {
       if (response.status === 200) {
         setIsLogged(true);
       } else {
-        console.error("Authentication failed:", response.data);
-        Alert.alert("Authentication failed:", response.data);
+        console.error("Authentication failed:", response.data.message);
+        Alert.alert("Authentication failed:", response.data.message);
         await AsyncStorage.removeItem("token");
         setIsLogged(false);
       }
     } else {
-      // If no token found
       setIsLogged(false);
     }
   } catch (error) {
-    console.error("Error checking authentication:", error);
-    Alert.alert("Error checking authentication:", error.message);
+    console.error(
+      "Error checking authentication:",
+      error.response.data.message
+    );
+    Alert.alert("Error checking authentication:", error.response.data.message);
     setIsLogged(false);
   }
 };
@@ -62,13 +64,13 @@ export const login = async (username, password, setIsLogged) => {
       await AsyncStorage.setItem("token", token);
       setIsLogged(true);
     } else {
-      console.error("Login failed:", response.data);
-      Alert.alert("Login failed:", response.data);
+      console.error("Login failed:", response.data.message);
+      Alert.alert("Login failed:", response.data.message);
       setIsLogged(false);
     }
   } catch (error) {
-    console.error("Error logging in:", error);
-    Alert.alert("Error logging in:", error.message);
+    console.error("Error logging in:", error.response.data.message);
+    Alert.alert("Error logging in:", error.response.data.message);
     setIsLogged(false);
   }
 };
@@ -86,13 +88,13 @@ export const signUp = async (email, username, password) => {
       Alert.alert("User registered successfully");
       return true;
     } else {
-      console.error("Registration failed:", response.data);
-      Alert.alert("Registration failed:", response.data);
+      console.error("Registration failed:", response.data.message);
+      Alert.alert("Registration failed:", response.data.message);
       return false;
     }
   } catch (error) {
-    console.error("Error registering user:", error);
-    Alert.alert("Error registering user:", error.message);
+    console.error("Error registering user:", error.response.data.message);
+    Alert.alert("Error registering user:", error.response.data.message);
     return false;
   }
 };
@@ -118,7 +120,7 @@ export const fetchUserInfo = async (setIsLogged, setUserInfo) => {
     setUserInfo(userData);
   } catch (error) {
     if (error.response && error.response.status === 401) {
-      console.error("Token expired or invalid:", error.response.data);
+      console.error("Token expired or invalid:", error.response.data.message);
       Alert.alert(
         "Token Expired",
         "Your session has expired. Please log in again."
@@ -154,7 +156,7 @@ export const fetchLeaderboardResults = async (setIsLogged, setUserResults) => {
     setUserResults(leaderboardData);
   } catch (error) {
     if (error.response && error.response.status === 401) {
-      console.error("Token expired or invalid:", error.response.data);
+      console.error("Token expired or invalid:", error.response.data.message);
       Alert.alert(
         "Token Expired",
         "Your session has expired. Please log in again."
@@ -165,6 +167,39 @@ export const fetchLeaderboardResults = async (setIsLogged, setUserResults) => {
       console.error("Error fetching leaderboard information:", error);
       Alert.alert("Error fetching leaderboard information:", error);
     }
-    return [];
+  }
+};
+
+export const saveUserResult = async (maxLevelReached, setIsLogged) => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+
+    const response = await axios.post(
+      `${API_ENDPOINTS.SAVE_RESULT}`,
+      { maxLevelReached },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.status === 200 || response.status === 201) {
+      console.log(response.data.message);
+    } else {
+      console.error("Failed to save user result:", response.data.message);
+      Alert.alert("Error", "Failed to save user result.");
+    }
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      console.error("Error saving user result:", error.response.data.message);
+      Alert.alert("Error", error.response.data.message);
+      await AsyncStorage.removeItem("token");
+      setIsLogged(false);
+    } else {
+      console.error("Error saving user result:", error.response.data.message);
+      Alert.alert("Error saving user result:", error.response.data.message);
+    }
   }
 };

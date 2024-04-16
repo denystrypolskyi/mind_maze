@@ -19,8 +19,8 @@ const LeaderboardItem = ({ place, username, bestResult }) => {
     color = "#CD7F32";
   } else {
     backgroundColor = "white";
-    borderColor = "gray";
-    color = "gray";
+    borderColor = "#555555";
+    color = "#555555";
   }
 
   return (
@@ -43,6 +43,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 20,
     padding: 20,
+    backgroundColor: "white",
   },
   placeContainer: {
     justifyContent: "center",
@@ -51,22 +52,24 @@ const styles = StyleSheet.create({
     height: 32,
     backgroundColor: "white",
     borderRadius: 20,
+    borderColor: "#555555",
     borderWidth: 2,
   },
   place: {
-    color: "gray",
+    color: "#555555",
     fontFamily: fonts.bold,
+    fontSize: textSizes.small,
   },
   userInfoContainer: {
     marginLeft: 20,
   },
   username: {
-    color: "gray",
+    color: "#444444",
     fontFamily: fonts.bold,
     fontSize: textSizes.large,
   },
   bestResult: {
-    color: "lightgray",
+    color: "#888888",
     fontFamily: fonts.bold,
     fontSize: textSizes.medium,
   },
