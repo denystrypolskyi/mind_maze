@@ -7,20 +7,39 @@ import {
   View,
   ScrollView,
   KeyboardAvoidingView,
+  ActivityIndicator,
 } from "react-native";
 import { login } from "../api/api";
 import { redirectToSignUpPage } from "../utils/helpers";
-import { fonts, textSizes } from "../constants/constants";
+import { colors, fonts, textSizes } from "../constants/constants";
 
 const LoginScreen = ({ navigation, route }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const { setIsLogged } = route.params;
 
   const handleLogin = async () => {
-    await login(username, password, setIsLogged);
+    setIsLoading(true);
+    try {
+      await login(username, password, setIsLogged);
+    } catch (error) {
+      console.error("Error while logging in:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <ActivityIndicator
+        style={styles.loadingIndicator}
+        size="large"
+        color="#0000ff"
+      />
+    );
+  }
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior="padding">
@@ -45,7 +64,7 @@ const LoginScreen = ({ navigation, route }) => {
             onChangeText={(text) => setPassword(text)}
           />
           <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={[styles.buttonText, { color: "#0095FF" }]}>
+            <Text style={[styles.buttonText, { color: colors.primary }]}>
               Log in
             </Text>
           </TouchableOpacity>
@@ -58,7 +77,7 @@ const LoginScreen = ({ navigation, route }) => {
             style={styles.signUpButton}
             onPress={() => redirectToSignUpPage(navigation)}
           >
-            <Text style={[styles.buttonText, { color: "#ffffff" }]}>
+            <Text style={[styles.buttonText, { color: "white" }]}>
               Sign up
             </Text>
           </TouchableOpacity>
@@ -71,7 +90,7 @@ const LoginScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.bgColor,
   },
   scrollViewContent: {
     flexGrow: 1,
@@ -82,7 +101,7 @@ const styles = StyleSheet.create({
   header: {
     fontFamily: fonts.bold,
     fontSize: 24,
-    color: "#55B8FF",
+    color: colors.primary,
   },
   formContainer: {
     alignItems: "center",
@@ -92,23 +111,21 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: "gray",
-    fontFamily: fonts.bold,
+    fontFamily: fonts.regular,
     fontSize: textSizes.medium,
     marginBottom: 20,
   },
   loginButton: {
     width: "100%",
-    backgroundColor: "#ffffff",
+    backgroundColor: "white",
     borderWidth: 2,
-    borderColor: "#0095FF",
+    borderColor: colors.primary,
     borderRadius: 20,
     padding: 14,
   },
   signUpButton: {
     width: "100%",
-    backgroundColor: "#0095FF",
-    borderWidth: 2,
-    borderColor: "#ffffff",
+    backgroundColor: colors.primary,
     borderRadius: 20,
     padding: 14,
   },
@@ -129,9 +146,14 @@ const styles = StyleSheet.create({
   },
   orText: {
     color: "gray",
-    fontFamily: fonts.bold,
+    fontFamily: fonts.regular,
     marginHorizontal: 10,
     fontSize: textSizes.medium,
+  },
+  loadingIndicator: {
+    position: "absolute",
+    alignSelf: "center",
+    top: "50%",
   },
 });
 

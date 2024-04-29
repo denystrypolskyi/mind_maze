@@ -20,21 +20,19 @@ export const checkAuthentication = async (setIsLogged) => {
 
       if (response.status === 200) {
         setIsLogged(true);
+        return;
       } else {
-        console.error("Authentication failed:", response.data.message);
         Alert.alert("Authentication failed:", response.data.message);
         await AsyncStorage.removeItem("token");
         setIsLogged(false);
+        return;
       }
     } else {
       setIsLogged(false);
+      return;
     }
   } catch (error) {
-    console.error(
-      "Error checking authentication:",
-      error.response.data.message
-    );
-    Alert.alert("Error checking authentication:", error.response.data.message);
+    Alert.alert("Error", error.response.data.message);
     setIsLogged(false);
   }
 };
@@ -43,15 +41,21 @@ export const logout = async (setIsLogged) => {
   try {
     await AsyncStorage.removeItem("token");
     setIsLogged(false);
-    console.log("You have been successfully logged out.");
     Alert.alert("Logged Out", "You have been successfully logged out.");
+    return;
   } catch (error) {
-    console.error("Failed to log out. Please try again later.");
     Alert.alert("Error", "Failed to log out. Please try again later.");
+    return;
   }
 };
 
 export const login = async (username, password, setIsLogged) => {
+  if (!username.trim() || !password.trim()) {
+    Alert.alert("Please provide both username and password.");
+    setIsLogged(false);
+    return;
+  }
+
   try {
     const response = await axios.post(`${API_ENDPOINTS.LOGIN}`, {
       username,
@@ -59,23 +63,43 @@ export const login = async (username, password, setIsLogged) => {
     });
 
     if (response.status === 200) {
-      const token = response.data;
-      console.log(`Token: ${token}`);
+      const token = response.data.token;
+      console.debug(`Token: ${token}`);
       await AsyncStorage.setItem("token", token);
       setIsLogged(true);
+      return;
     } else {
-      console.error("Login failed:", response.data.message);
       Alert.alert("Login failed:", response.data.message);
       setIsLogged(false);
+      return;
     }
   } catch (error) {
-    console.error("Error logging in:", error.response.data.message);
-    Alert.alert("Error logging in:", error.response.data.message);
+    Alert.alert(
+      "Error",
+      error.response ? error.response.data.message : error.message
+    );
     setIsLogged(false);
+    return;
   }
 };
 
 export const signUp = async (email, username, password) => {
+  email = email.trim();
+  username = username.trim();
+  password = password.trim();
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!email || !username || !password) {
+    Alert.alert("Please fill in all fields.");
+    return false;
+  }
+
+  if (!emailRegex.test(email)) {
+    Alert.alert("Please enter a valid email address.");
+    return false;
+  }
+
   try {
     const response = await axios.post(`${API_ENDPOINTS.REGISTER}`, {
       email,
@@ -84,60 +108,32 @@ export const signUp = async (email, username, password) => {
     });
 
     if (response.status === 200) {
-      console.log("User registered successfully");
       Alert.alert("User registered successfully");
       return true;
     } else {
-      console.error("Registration failed:", response.data.message);
       Alert.alert("Registration failed:", response.data.message);
       return false;
     }
   } catch (error) {
-    console.error("Error registering user:", error.response.data.message);
-    Alert.alert("Error registering user:", error.response.data.message);
+    Alert.alert(
+      "Error",
+      error.response ? error.response.data.message : error.message
+    );
     return false;
   }
 };
 
-export const fetchUserInfo = async (setIsLogged, setUserInfo) => {
+export const fetchLeaderboardData = async (setIsLogged, setUserResults) => {
   try {
     const token = await AsyncStorage.getItem("token");
-    const response = await axios.get(`${API_ENDPOINTS.USER_INFO}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
 
-    if (!response.data) {
-      console.error("Failed to fetch user information");
-      Alert.alert("Failed to fetch user information");
+    if (!token) {
+      await AsyncStorage.removeItem("token");
+      setIsLogged(false);
       return;
     }
 
-    const userData = response.data;
-
-    setUserInfo(userData);
-  } catch (error) {
-    if (error.response && error.response.status === 401) {
-      console.error("Token expired or invalid:", error.response.data.message);
-      Alert.alert(
-        "Token Expired",
-        "Your session has expired. Please log in again."
-      );
-      await AsyncStorage.removeItem("token");
-      setIsLogged(false);
-    } else {
-      console.error("Error fetching user information:", error);
-      Alert.alert("Error fetching user information:", error);
-    }
-  }
-};
-
-export const fetchLeaderboardResults = async (setIsLogged, setUserResults) => {
-  try {
-    const token = await AsyncStorage.getItem("token");
-    const response = await axios.get(`${API_ENDPOINTS.USER_RESULTS}`, {
+    const response = await axios.get(`${API_ENDPOINTS.LEADERBOARD}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -146,37 +142,47 @@ export const fetchLeaderboardResults = async (setIsLogged, setUserResults) => {
 
     if (!response.data) {
       Alert.alert("No Data", "No leaderboard data available.");
-      return [];
+      return;
     }
 
     const leaderboardData = response.data;
 
-    leaderboardData.sort((a, b) => b.maxLevelReached - a.maxLevelReached);
+    leaderboardData.sort((a, b) => b.maxLevel - a.maxLevel);
 
     setUserResults(leaderboardData);
+    return;
   } catch (error) {
     if (error.response && error.response.status === 401) {
-      console.error("Token expired or invalid:", error.response.data.message);
       Alert.alert(
         "Token Expired",
         "Your session has expired. Please log in again."
       );
       await AsyncStorage.removeItem("token");
       setIsLogged(false);
+      return;
     } else {
-      console.error("Error fetching leaderboard information:", error);
-      Alert.alert("Error fetching leaderboard information:", error);
+      Alert.alert(
+        "Error",
+        error.response ? error.response.data.message : error.message
+      );
+      return;
     }
   }
 };
 
-export const saveUserResult = async (maxLevelReached, setIsLogged) => {
+export const saveUserResult = async (levelReached, setIsLogged) => {
   try {
     const token = await AsyncStorage.getItem("token");
 
+    if (!token) {
+      await AsyncStorage.removeItem("token");
+      setIsLogged(false);
+      return;
+    }
+
     const response = await axios.post(
       `${API_ENDPOINTS.SAVE_RESULT}`,
-      { maxLevelReached },
+      { levelReached },
       {
         headers: {
           "Content-Type": "application/json",
@@ -186,20 +192,180 @@ export const saveUserResult = async (maxLevelReached, setIsLogged) => {
     );
 
     if (response.status === 200 || response.status === 201) {
-      console.log(response.data.message);
+      console.debug(response.data.message);
+      return;
     } else {
-      console.error("Failed to save user result:", response.data.message);
       Alert.alert("Error", "Failed to save user result.");
+      return;
     }
   } catch (error) {
     if (error.response && error.response.status === 401) {
-      console.error("Error saving user result:", error.response.data.message);
       Alert.alert("Error", error.response.data.message);
       await AsyncStorage.removeItem("token");
       setIsLogged(false);
+      return;
     } else {
-      console.error("Error saving user result:", error.response.data.message);
-      Alert.alert("Error saving user result:", error.response.data.message);
+      Alert.alert(
+        "Error",
+        error.response ? error.response.data.message : error.message
+      );
+      return;
+    }
+  }
+};
+
+export const fetchUserInfo = async (setIsLogged) => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+
+    if (!token) {
+      await AsyncStorage.removeItem("token");
+      setIsLogged(false);
+      return;
+    }
+
+    const response = await axios.get(`${API_ENDPOINTS.USER_INFO}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.data) {
+      Alert.alert("Failed to fetch user information");
+      return;
+    }
+
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      Alert.alert(
+        "Token Expired",
+        "Your session has expired. Please log in again."
+      );
+      await AsyncStorage.removeItem("token");
+      setIsLogged(false);
+      return;
+    } else {
+      Alert.alert(
+        "Error",
+        error.response ? error.response.data.message : error.message
+      );
+      return;
+    }
+  }
+};
+
+export const updateUserInfo = async (userData) => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+
+    if (!token) {
+      await AsyncStorage.removeItem("token");
+      setIsLogged(false);
+      return;
+    }
+
+    const response = await axios.put(`${API_ENDPOINTS.USER_INFO}`, userData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.status === 200) {
+      Alert.alert("Success", response.data.message)
+      return response;
+    } else {
+      Alert.alert(response.data.message);
+      return;
+    }
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      await AsyncStorage.removeItem("token");
+      Alert.alert("Your session has expired. Please log in again.");
+      return;
+    } else {
+      Alert.alert(error.response.data.message);
+      return;
+    }
+  }
+};
+
+export const fetchUserAvatar = async (setIsLogged) => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+    if (!token) {
+      await AsyncStorage.removeItem("token");
+      setIsLogged(false);
+      return;
+    }
+
+    const response = await axios.get(`${API_ENDPOINTS.USER_AVATAR}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const avatarPathSegments = response.data.avatarPath.split("\\");
+    const fileName = avatarPathSegments[avatarPathSegments.length - 1];
+    return fileName;
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      Alert.alert("Error", error.response.data.message);
+      await AsyncStorage.removeItem("token");
+      setIsLogged(false);
+      return;
+    } else {
+      Alert.alert(
+        "Error",
+        error.response ? error.response.data.message : error.message
+      );
+      return;
+    }
+  }
+};
+
+export const updateUserAvatar = async (setIsLogged, fileUri) => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+    if (!token) {
+      await AsyncStorage.removeItem("token");
+      setIsLogged(false);
+      return;
+    }
+
+    // const formData = new FormData();
+    // formData.append("avatar", {
+    //   uri: fileUri,
+    //   type: "image/jpeg",
+    //   name: "avatar.jpg",
+    // });
+
+    // const response = await axios.put(`${API_ENDPOINTS.USER_AVATAR}`, formData, {
+    //   headers: {
+    //     Accept: "application/json",
+    //     "Content-Type": "multipart/form-data",
+    //     Authorization: `Bearer ${token}`,
+    //   },
+    // });
+    // if (response.status === 200) {
+    //   Alert.alert("Success", "Avatar uploaded successfully");
+    // } else {
+    //   console.error("Failed to upload avatar");
+    // }
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      Alert.alert("Error", error.response.data.message);
+      await AsyncStorage.removeItem("token");
+      setIsLogged(false);
+      return;
+    } else {
+      Alert.alert(
+        "Error",
+        error.response ? error.response.data.message : error.message
+      );
+      return;
     }
   }
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { StyleSheet, TextInput, View } from "react-native";
-import { fonts, textSizes } from "../constants/constants";
+import { colors, fonts, textSizes } from "../constants/constants";
 
 const NumberInput = ({ marginBottom, width, value, onChangeText }) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -27,7 +27,7 @@ const NumberInput = ({ marginBottom, width, value, onChangeText }) => {
       ]}
     >
       <TextInput
-        style={[styles.input, !isEmpty && styles.focusedInput]}
+        style={styles.input}
         keyboardType="numeric"
         textAlign="center"
         value={value}
@@ -42,22 +42,19 @@ const NumberInput = ({ marginBottom, width, value, onChangeText }) => {
 const styles = StyleSheet.create({
   container: {
     borderWidth: 2,
-    borderColor: "#333333",
+    borderColor: colors.lightGray,
     borderRadius: 20,
     backgroundColor: "white",
   },
   input: {
-    fontFamily: fonts.bold,
+    fontFamily: fonts.regular,
     fontSize: textSizes.medium,
     paddingVertical: 12,
     paddingHorizontal: 25,
     textAlign: "center",
   },
   focused: {
-    borderColor: "#007bff",
-  },
-  focusedInput: {
-    color: "#007bff",
+    borderColor: colors.primary,
   },
 });
 

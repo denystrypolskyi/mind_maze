@@ -4,81 +4,97 @@ import {
   Text,
   View,
   ActivityIndicator,
-  Animated,
+  Image,
+  TouchableOpacity,
 } from "react-native";
-import { fonts, textSizes } from "../constants/constants";
-import { fetchUserInfo, logout } from "../api/api";
+import {
+  AVATAR_BASE_URL,
+  colors,
+  fonts,
+  textSizes,
+} from "../constants/constants";
+import {
+  fetchUserAvatar,
+  fetchUserInfo,
+  logout,
+  updateUserAvatar,
+  updateUserInfo,
+} from "../api/api";
 import { useFocusEffect } from "@react-navigation/native";
-import Ionicons from "react-native-vector-icons/Ionicons";
-
-const UserInfo = ({ username, email }) => {
-  return (
-    <View style={styles.userInfoContainer}>
-      <View
-        style={[
-          styles.userInfoItem,
-          { borderTopLeftRadius: 20, borderTopRightRadius: 20 },
-        ]}
-      >
-        <Ionicons name="person" size={20} color="green" />
-        <Text style={styles.userInfoText}>{username}</Text>
-      </View>
-      <View
-        style={[
-          styles.userInfoItem,
-          {
-            borderBottomLeftRadius: 20,
-            borderBottomRightRadius: 20,
-          },
-        ]}
-      >
-        <Ionicons name="mail" size={20} color="skyblue" />
-        <Text style={styles.userInfoText}>{email}</Text>
-      </View>
-    </View>
-  );
-};
+import * as ImagePicker from "expo-image-picker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import EditableInput from "../components/EditableInput";
+import Button from "../components/Button";
 
 const ProfileScreen = ({ route }) => {
-  const [userInfo, setUserInfo] = useState({});
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [animateCup] = useState(new Animated.Value(0));
 
   const { setIsLogged } = route.params;
 
   useFocusEffect(
     React.useCallback(() => {
-      const getUserInfoAndAnimateCup = async () => {
-        setIsLoading(true);
-        await fetchUserInfo(setIsLogged, setUserInfo);
-        setTimeout(() => {
-          setIsLoading(false);
-          animateCupEffect();
-        }, 1000);
-      };
-      getUserInfoAndAnimateCup();
+      getUserInfo();
     }, [])
   );
 
-  const animateCupEffect = () => {
-    animateCup.setValue(0);
+  const getUserInfo = async () => {
+    setIsLoading(true);
+    try {
+      const userData = await fetchUserInfo(setIsLogged);
+      setUsername(userData.username);
+      setEmail(userData.email);
 
-    Animated.timing(animateCup, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start();
+      const fileName = await fetchUserAvatar(setIsLogged);
+      setAvatarUrl(`${AVATAR_BASE_URL}/${fileName}`);
+    } catch (error) {
+      console.error("Error while fetching user info:", error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const cupStyle = {
-    transform: [
-      {
-        scale: animateCup.interpolate({
-          inputRange: [0, 0.5, 1],
-          outputRange: [1, 1.2, 1],
-        }),
-      },
-    ],
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.cancelled) {
+      const fileUri = result.assets[0].uri;
+
+      setIsLoading(true);
+      try {
+        await updateUserAvatar(setIsLogged, fileUri);
+        setAvatarUrl(fileUri);
+      } catch (error) {
+        console.log("Error while updating user avatar:", error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleSaveChanges = async () => {
+    try {
+      const updatedUserData = {
+        username,
+        email,
+      };
+
+      const response = await updateUserInfo(updatedUserData);
+      if (response) {
+        const newToken = response.data.token;
+        await AsyncStorage.setItem("token", newToken);
+      }
+    } catch (error) {
+      console.error("Error while updating user info:", error.message);
+    }
   };
 
   if (isLoading) {
@@ -94,12 +110,35 @@ const ProfileScreen = ({ route }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Profile</Text>
-      <UserInfo username={userInfo.username} email={userInfo.email} />
-      <View style={styles.trophyContainer}>
-        <Animated.View style={cupStyle}>
-          <Ionicons name="trophy" size={128} color="gold" />
-        </Animated.View>
-      </View>
+      <TouchableOpacity onPress={pickImage}>
+        <Image
+          style={styles.image}
+          source={{
+            uri: avatarUrl,
+          }}
+        />
+      </TouchableOpacity>
+      <EditableInput
+        value={username}
+        iconName="person"
+        setValue={setUsername}
+      />
+      <EditableInput value={email} iconName="mail" setValue={setEmail} />
+      <Button
+        text="Save Changes"
+        backgroundColor="#1abc9c"
+        onPress={handleSaveChanges}
+        width="100%"
+        marginBottom={15}
+      />
+      <Button
+        text="Logout"
+        backgroundColor="#e74c3c"
+        onPress={() => {
+          logout(setIsLogged);
+        }}
+        width="100%"
+      />
     </View>
   );
 };
@@ -107,18 +146,10 @@ const ProfileScreen = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
-    paddingTop: 40,
-  },
-  userInfoContainer: {
-    flex: 1,
+    backgroundColor: colors.bgColor,
+    paddingVertical: 40,
     paddingHorizontal: 20,
-  },
-  userInfoItem: {
-    flexDirection: "row",
     alignItems: "center",
-    padding: 20,
-    backgroundColor: "white",
   },
   header: {
     color: "black",
@@ -127,38 +158,47 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
   },
-  logout: {
-    textAlign: "center",
-    fontFamily: fonts.bold,
-    fontSize: textSizes.large,
-    color: "red",
+  image: {
+    height: 150,
+    width: 150,
+    borderRadius: 75,
+    marginBottom: 20,
   },
-  userInfoText: {
-    fontFamily: fonts.bold,
-    fontSize: textSizes.large,
-    textAlign: "center",
-    color: "#333333",
-    marginLeft: 5,
-  },
-  trophyContainer: {
-    flex: 1,
-    justifyContent: "center",
+  button: {
+    marginBottom: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
     alignItems: "center",
-    backgroundColor: "white",
-    borderTopLeftRadius: 50,
-    borderTopRightRadius: 50,
+    justifyContent: "center",
+    width: "100%",
+  },
+  buttonText: {
+    color: "white",
+    fontSize: textSizes.medium,
+    fontFamily: fonts.bold,
+  },
+  rank: {
+    textAlign: "center",
+    fontFamily: fonts.regular,
+    fontSize: textSizes.large,
+    marginBottom: 5,
   },
   loadingIndicator: {
     position: "absolute",
     alignSelf: "center",
     top: "50%",
   },
+  userInfoText: {
+    fontFamily: fonts.regular,
+    fontSize: textSizes.medium,
+  },
+  saveButton: {
+    backgroundColor: "#1abc9c",
+  },
+  logoutButton: {
+    backgroundColor: "#e74c3c",
+  },
 });
 
 export default ProfileScreen;
-
-{
-  /* <TouchableOpacity onPress={() => logout(setIsLogged)}>
-        <Text style={styles.logout}>Logout</Text>
-      </TouchableOpacity> */
-}

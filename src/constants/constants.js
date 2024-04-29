@@ -11,10 +11,15 @@ export const numbersRange = [
 ];
 
 export const colors = {
+  bgColor: "#f5f5f5",
   primary: "#0095FF",
-  darkGray: "#495057",
-  lightGray: "#F0F0F0",
-  white: "#FFFFFF",
+  darkGray: "#444444",
+  mediumGray: "#888888",
+  gold: "#FFD700",
+  silver: "#C0C0C0",
+  bronze: "#CD7F32",
+  gray: "gray",
+  lightGray: "lightgray",
 };
 
 export const fonts = {
@@ -26,17 +31,19 @@ export const textSizes = {
   small: 14,
   medium: 16,
   large: 18,
-  extraLarge: 24,
-  huge: 32,
+  extraLarge: 20,
+  huge: 24,
 };
 
 export const API_BASE_URL = "http://192.168.1.14:3000";
+export const AVATAR_BASE_URL = `${API_BASE_URL}/avatars`;
 
 export const API_ENDPOINTS = {
   USER_INFO: `${API_BASE_URL}/user-info`,
   VERIFY_TOKEN: `${API_BASE_URL}/verify-token`,
   LOGIN: `${API_BASE_URL}/login`,
   REGISTER: `${API_BASE_URL}/register`,
-  USER_RESULTS: `${API_BASE_URL}/user-results`,
+  LEADERBOARD: `${API_BASE_URL}/leaderboard`,
   SAVE_RESULT: `${API_BASE_URL}/save-result`,
+  USER_AVATAR: `${API_BASE_URL}/user-avatar`,
 };

@@ -7,24 +7,47 @@ import {
   View,
   ScrollView,
   KeyboardAvoidingView,
+  ActivityIndicator,
 } from "react-native";
 import { signUp } from "../api/api";
 import { redirectToLoginPage } from "../utils/helpers";
-import { fonts, textSizes } from "../constants/constants";
+import { colors, fonts, textSizes } from "../constants/constants";
 
 const SignUpScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSignUp = async () => {
-    const success = await signUp(email, username, password, navigation);
-    if (success) {
-      setEmail("");
-      setUsername("");
-      setPassword("");
+    setIsLoading(true);
+    try {
+      const success = await signUp(email, username, password, navigation);
+      if (success) {
+        resetState();
+      }
+    } catch (error) {
+      console.error("Error while signing up:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const resetState = () => {
+    setEmail("");
+    setUsername("");
+    setPassword("");
+  };
+
+  if (isLoading) {
+    return (
+      <ActivityIndicator
+        style={styles.loadingIndicator}
+        size="large"
+        color="#0000ff"
+      />
+    );
+  }
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior="padding">
@@ -68,8 +91,10 @@ const SignUpScreen = ({ navigation }) => {
           value={password}
           onChangeText={(text) => setPassword(text)}
         />
-        <TouchableOpacity style={styles.loginButton} onPress={handleSignUp}>
-          <Text style={[styles.buttonText, { color: "#0095FF" }]}>Sign up</Text>
+        <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
+          <Text style={[styles.buttonText, { color: colors.primary }]}>
+            Sign up
+          </Text>
         </TouchableOpacity>
         <View style={styles.horizontalLineContainer}>
           <View style={styles.horizontalLine} />
@@ -77,7 +102,7 @@ const SignUpScreen = ({ navigation }) => {
           <View style={styles.horizontalLine} />
         </View>
         <TouchableOpacity
-          style={[styles.signUpButton, { marginBottom: 15 }]}
+          style={[styles.loginButton, { marginBottom: 15 }]}
           onPress={() => redirectToLoginPage(navigation)}
         >
           <Text style={[styles.buttonText, { color: "white" }]}>Log in</Text>
@@ -90,7 +115,7 @@ const SignUpScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.bgColor,
   },
   scrollViewContent: {
     flexGrow: 1,
@@ -101,7 +126,7 @@ const styles = StyleSheet.create({
   header: {
     fontFamily: fonts.bold,
     fontSize: 24,
-    color: "#55B8FF",
+    color: colors.primary,
   },
   formContainer: {
     alignItems: "center",
@@ -111,23 +136,21 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: "gray",
-    fontFamily: fonts.bold,
+    fontFamily: fonts.regular,
     fontSize: textSizes.medium,
     marginBottom: 20,
   },
   loginButton: {
     width: "100%",
-    backgroundColor: "#ffffff",
-    borderWidth: 2,
-    borderColor: "#0095FF",
+    backgroundColor: colors.primary,
     borderRadius: 20,
     padding: 14,
   },
   signUpButton: {
     width: "100%",
-    backgroundColor: "#0095FF",
+    backgroundColor: "white",
     borderWidth: 2,
-    borderColor: "#ffffff",
+    borderColor: colors.primary,
     borderRadius: 20,
     padding: 14,
   },
@@ -148,9 +171,14 @@ const styles = StyleSheet.create({
   },
   orText: {
     color: "gray",
-    fontFamily: fonts.bold,
+    fontFamily: fonts.regular,
     marginHorizontal: 10,
     fontSize: textSizes.medium,
+  },
+  loadingIndicator: {
+    position: "absolute",
+    alignSelf: "center",
+    top: "50%",
   },
 });
 

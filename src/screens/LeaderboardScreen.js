@@ -6,29 +6,33 @@ import {
   View,
   ActivityIndicator,
 } from "react-native";
-import { fetchLeaderboardResults } from "../api/api";
-import { fonts, textSizes } from "../constants/constants";
 import { useFocusEffect } from "@react-navigation/native";
+import { fetchLeaderboardData } from "../api/api";
+import { fonts, textSizes } from "../constants/constants";
 import LeaderboardItem from "../components/LeaderboardItem";
 
 const LeaderboardScreen = ({ route }) => {
-  const [userResults, setUserResults] = useState([]);
+  const [leaderboardData, setLeaderboardData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const { setIsLogged } = route.params;
 
   useFocusEffect(
     React.useCallback(() => {
-      const getLeaderboardData = async () => {
-        setIsLoading(true);
-        await fetchLeaderboardResults(setIsLogged, setUserResults);
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 1000);
-      };
       getLeaderboardData();
     }, [])
   );
+
+  const getLeaderboardData = async () => {
+    setIsLoading(true);
+    try {
+      await fetchLeaderboardData(setIsLogged, setLeaderboardData);
+    } catch (error) {
+      console.error("Error while fetching user results:", error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -44,12 +48,12 @@ const LeaderboardScreen = ({ route }) => {
     <View style={styles.container}>
       <Text style={styles.header}>Leaderboard</Text>
       <FlatList
-        data={userResults}
+        data={leaderboardData}
         renderItem={({ item, index }) => (
           <LeaderboardItem
-            place={index + 1}
+            userRank={index + 1}
             username={item.username}
-            bestResult={item.maxLevelReached}
+            levelReached={item.levelReached}
           />
         )}
         keyExtractor={(item) => item._id}

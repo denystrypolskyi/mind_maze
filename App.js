@@ -3,7 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useFonts } from "expo-font";
-import { Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import LoginScreen from "./src/screens/LoginScreen";
 import SignUpScreen from "./src/screens/SignUpScreen";
@@ -59,11 +59,11 @@ const App = () => {
       setIsFontLoaded(true);
     } else {
       return (
-        <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-        >
-          <Text>Loading...</Text>
-        </View>
+        <ActivityIndicator
+          style={styles.loadingIndicator}
+          size="large"
+          color="#0000ff"
+        />
       );
     }
   }
@@ -122,5 +122,13 @@ const App = () => {
     </NavigationContainer>
   );
 };
+
+styles = StyleSheet.create({
+  loadingIndicator: {
+    position: "absolute",
+    alignSelf: "center",
+    top: "50%",
+  },
+});
 
 export default App;

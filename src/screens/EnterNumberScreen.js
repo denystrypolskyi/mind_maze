@@ -1,16 +1,16 @@
 import { useState } from "react";
+import { StyleSheet, Text } from "react-native";
+import { colors, fonts, textSizes } from "../constants/constants";
 import NumberInput from "../components/NumberInput";
 import Button from "../components/Button";
-import { StyleSheet, Text } from "react-native";
-import { fonts, textSizes } from "../constants/constants";
 
 const EnterNumberScreen = ({ targetNumber, onNumberSubmit }) => {
   const [enteredNumber, setEnteredNumber] = useState("");
 
   return (
     <>
-      <Text style={[styles.header, { marginBottom: 15 }]}>
-        What's the number?
+      <Text style={styles.instruction}>
+        Please enter the number you remembered below:
       </Text>
       <NumberInput
         marginBottom={20}
@@ -18,7 +18,11 @@ const EnterNumberScreen = ({ targetNumber, onNumberSubmit }) => {
         value={enteredNumber}
         onChangeText={setEnteredNumber}
       />
-      <Button text="Submit" onPress={() => onNumberSubmit(enteredNumber)} />
+      <Button
+        text="Submit"
+        onPress={() => onNumberSubmit(enteredNumber)}
+        backgroundColor={colors.primary}
+      />
     </>
   );
 };
@@ -27,7 +31,14 @@ const styles = StyleSheet.create({
   header: {
     fontFamily: fonts.bold,
     fontSize: textSizes.extraLarge,
-    color: "#333333",
+    color: colors.darkGray,
+  },
+  instruction: {
+    fontFamily: fonts.regular,
+    fontSize: textSizes.medium,
+    color: colors.gray,
+    textAlign: "center",
+    marginBottom: 15,
   },
 });
 

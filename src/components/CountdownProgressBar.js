@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text } from "react-native";
-import { fonts, textSizes } from "../constants/constants";
+import { StyleSheet } from "react-native";
+import { colors, fonts, textSizes } from "../constants/constants";
 import * as Progress from "react-native-progress";
 
 const CountdownProgressBar = ({ seconds, width }) => {
@@ -21,7 +21,7 @@ const CountdownProgressBar = ({ seconds, width }) => {
 
 const styles = StyleSheet.create({
   timerText: {
-    color: "#495057",
+    color: colors.primary,
     textAlign: "center",
     fontFamily: fonts.bold,
     fontSize: textSizes.extraLarge,
